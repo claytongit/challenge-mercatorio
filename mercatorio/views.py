@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import CreditorSerializer
-from .models import Creditor, PersonalDocument
-from mercatorio.forms import PersonalDocumentForm
+from .models import Creditor, PersonalDocument, Certificate
+from mercatorio.forms import PersonalDocumentForm, CertificateForms
 
 # Create your views here.
 @api_view(['POST'])
@@ -30,3 +30,15 @@ def upload_document_view(request, pk):
             document.creditor = creditor
             document.save()
     return render(request, 'mercatorio/index.html', {'form': form, 'creditor': creditor, 'documents': Personal_document})
+
+def upload_certificate_view(request, pk):
+    creditor = get_object_or_404(Creditor, pk=pk)
+    form = CertificateForms()
+    certificate = Certificate.objects.filter(creditor=creditor)
+    if request.method == 'POST':
+        form = CertificateForms(request.POST, request.FILES)
+        if form.is_valid():
+            certificate = form.save(commit=False)
+            certificate.creditor = creditor
+            certificate.save()
+    return render(request, 'mercatorio/certificate.html', {'form': form, 'creditor': creditor, 'certificates': certificate})

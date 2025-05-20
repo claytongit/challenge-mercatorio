@@ -1,7 +1,7 @@
 from django.test import TestCase, override_settings
 import tempfile
 from django.core.files.uploadedfile import SimpleUploadedFile
-from mercatorio.forms import PersonalDocumentForm
+from mercatorio.forms import PersonalDocumentForm, CertificateForms
 # from django.core.exceptions import ValidationError 
 
 from mercatorio.models import Creditor
@@ -97,3 +97,57 @@ class UploadDocumentRouteTest(TestCase):
 
         self.assertFalse(form.is_valid())
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
+class UploadCertificateRouteTest(TestCase):
+    def setUp(self):
+        self.form = CertificateForms
+        self.creditor = Creditor.objects.create(
+            name="Test Creditor",
+            cpf_cnpj="123.456.789-00",
+            email="test@example.com",
+            phone="(11) 9999-9999"
+        )
+    
+    def create_temp_file(self, name='test.pdf', size=1024, content_type='application/pdf'):
+        file = tempfile.NamedTemporaryFile(suffix='test.pdf')
+        file.write(b'a' * size)
+        file.seek(0)
+        return SimpleUploadedFile(name, file.read(), content_type=content_type)
+
+    def test_upload_certificate_route_view(self):
+        response = self.client.get(f'/credores/{self.creditor.id}/certidoes')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'mercatorio/certificate.html')
+
+    def test_upload_certificate_route_view_has_form(self):
+        response = self.client.get(f'/credores/{self.creditor.id}/certidoes')
+
+        self.assertContains(response, '<form')
+    
+    def test_form_can_be_validated_pdf(self):
+        file = self.create_temp_file(name='valid.pdf')
+        form = self.form(
+            data={'cert_type': 'federal', 'origin': 'manual', 'status': 'pending'},
+            files={'file': file}
+        )
+
+        self.assertTrue(form.is_valid())
+    
+    def test_form_can_be_invalidated_size(self):
+        file = self.create_temp_file(name='large.pdf', size=10 * 1024 * 1024)
+        form = self.form(
+            data={'cert_type': 'federal', 'origin': 'manual', 'status': 'pending'},
+            files={'file': file}
+        )
+
+        self.assertFalse(form.is_valid())
+    
+    def test_form_can_be_invalidated_extension(self):
+        file = self.create_temp_file(name='invalid.exe')
+        form = self.form(
+            data={'cert_type': 'federal', 'origin': 'manual', 'status': 'pending'},
+            files={'file': file}
+        )
+
+        self.assertFalse(form.is_valid())

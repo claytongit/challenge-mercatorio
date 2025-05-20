@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Creditor, Precatorio, PersonalDocument
+from .models import Creditor, Precatorio, PersonalDocument, Certificate
 
 
 # Register your models here.
@@ -17,4 +17,9 @@ class PrecatorioAdmin(admin.ModelAdmin):
 @admin.register(PersonalDocument)
 class PersonalDocumentAdmin(admin.ModelAdmin):
     list_display = ('id','doc_type','creditor', 'file_url',)
+    ordering = ('-id',)
+
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display = ('id','creditor','cert_type', 'origin', 'status', 'file_url',)
     ordering = ('-id',)

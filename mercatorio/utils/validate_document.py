@@ -12,3 +12,8 @@ def validate_file_size(file):
     if file.size > max_size:
         raise ValidationError(f'O arquivo é muito grande! Tamanho máximo permitido: 5MB.')
 
+def validate_certificate_extension(file):
+    ext = os.path.splitext(file.name)[1].lower()
+    valid_extensions = ['.pdf']
+    if ext not in valid_extensions:
+        raise ValidationError(f'Extensão não permitida: {ext}. Use: {", ".join(valid_extensions)}')

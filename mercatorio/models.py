@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from .utils.validate_document import validate_document_extension, validate_file_size
+from .utils.validate_document import validate_document_extension, validate_file_size, validate_certificate_extension
 
 # Create your models here.
 class Creditor(models.Model):
@@ -73,11 +73,24 @@ class Certificate(models.Model):
 
     cert_type = models.CharField(max_length=50, choices=CertificateType.choices)
     origin = models.CharField(max_length=20, choices=CertificateOrigin.choices)
+    file = models.FileField(
+        upload_to='certificates/',
+        validators=[validate_certificate_extension, validate_file_size],
+        null=True, 
+        blank=True, 
+    )
     file_url = models.URLField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=CertificateStatus.choices, default=CertificateStatus.PENDING)
     received_at = models.DateTimeField(default=timezone.now)
 
     creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE, related_name='certificates')
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.file and not self.file_url:
+            self.file_url = self.file.url
+            Certificate.objects.filter(pk=self.pk).update(file_url=self.file_url)
 
     def __str__(self):
         return f"{self.cert_type} - {self.creditor.name} ({self.status})"
