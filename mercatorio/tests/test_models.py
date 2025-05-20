@@ -1,9 +1,12 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
+import tempfile
 
 from mercatorio.models import Creditor, Precatorio, PersonalDocument, Certificate
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp()
 # Create your tests here.
 class CreditorTest(TestCase):
     def setUp(self):
@@ -73,9 +76,10 @@ class PrecatorioTest(TestCase):
                 publication_date = "2023-10-02",
                 creditor = None # Creditor Null
             )
-
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PersonalDocumentTest(TestCase):
     def setUp(self):
+        file = self.create_temp_file(name='valid_doc.pdf')
         self.creditor = Creditor.objects.create(
             name="Test Creditor",
             cpf_cnpj="123.456.789-00",
@@ -84,33 +88,64 @@ class PersonalDocumentTest(TestCase):
         )
         self.personal_document = PersonalDocument.objects.create(
             doc_type = "RG",
-            file_url = "http://example.com/rg.pdf",
+            file = file,
+            file_url = "media/documents/valid_doc.pdf",
             creditor = self.creditor
         )
+    
+    def create_temp_file(self, name='test.pdf', size=1024, content_type='application/pdf'):
+        file = tempfile.NamedTemporaryFile(suffix='test.pdf')
+        file.write(b'a' * size)
+        file.seek(0)
+        return SimpleUploadedFile(name, file.read(), content_type=content_type)
 
     def test_personal_document_creation(self):
         self.assertEqual(self.personal_document.doc_type, "RG")
-        self.assertEqual(self.personal_document.file_url, "http://example.com/rg.pdf")
+        self.assertEqual(self.personal_document.file_url, "media/documents/valid_doc.pdf")
         self.assertEqual(str(self.personal_document), "RG - Test Creditor")
     
     def test_personal_document_creation_invalid_creditor_null(self):
         with self.assertRaises(IntegrityError):
             PersonalDocument.objects.create(
                 doc_type = "RG",
-                file_url = "http://example.com/rg.pdf",
+                file_url = "media/documents/valid_doc.pdf",
                 creditor = None # Creditor Null
             )
 
     def test_personal_document_creation_invalid_doc_type(self):
         personal_document = PersonalDocument.objects.create(
             doc_type = "PIS", # Invalid doc_type
-            file_url = "http://example.com/rg.pdf",
+            file_url = "media/documents/valid_doc.pdf",
             creditor = self.creditor
         )          
 
         with self.assertRaises(ValidationError):
             personal_document.full_clean()
-
+    
+    def test_invalid_file_size(self):
+        file = self.create_temp_file(name='large.pdf', size=6 * 1024 * 1024)  # 6MB
+        doc = PersonalDocument.objects.create(
+            doc_type = "RG",
+            file = file,
+            file_url = "media/documents/valid_doc.pdf",
+            creditor = self.creditor
+        )
+        with self.assertRaises(ValidationError) as context:
+            doc.full_clean()
+        self.assertIn('O arquivo é muito grande', str(context.exception))
+    
+    def test_invalid_extension(self):
+        file = self.create_temp_file(name='invalid.exe')
+        doc = PersonalDocument.objects.create(
+            doc_type = "RG",
+            file = file,
+            file_url = "media/documents/valid_doc.pdf",
+            creditor = self.creditor
+        )
+        with self.assertRaises(ValidationError) as context:
+            doc.full_clean()
+        self.assertIn('Extensão não permitida', str(context.exception))
+        
 class CertificateTest(TestCase):
     def setUp(self):
         self.creditor = Creditor.objects.create(
@@ -122,14 +157,14 @@ class CertificateTest(TestCase):
         self.certificate = Certificate.objects.create(
             cert_type = "state",
             origin = "manual",
-            file_url = "http://example.com/certificate.pdf",
+            file_url = "media/documents/valid_doc.pdf",
             status = "pending",
             creditor = self.creditor
         )
     def test_certificate_creation(self):
         self.assertEqual(self.certificate.cert_type, "state")
         self.assertEqual(self.certificate.origin, "manual")
-        self.assertEqual(self.certificate.file_url, "http://example.com/certificate.pdf")
+        self.assertEqual(self.certificate.file_url, "media/documents/valid_doc.pdf")
         self.assertEqual(self.certificate.status, "pending")
         self.assertEqual(self.certificate.creditor, self.creditor)
         self.assertEqual(str(self.certificate), "state - Test Creditor (pending)")
@@ -139,7 +174,7 @@ class CertificateTest(TestCase):
             Certificate.objects.create(
                 cert_type = "state",
                 origin = "manual",
-                file_url = "http://example.com/certificate.pdf",
+                file_url = "media/documents/valid_doc.pdf",
                 status = "pending",
                 creditor = None # Creditor Null
             )
@@ -148,7 +183,7 @@ class CertificateTest(TestCase):
         certificate = Certificate.objects.create(
             cert_type = "invalid", # Invalid cert_type
             origin = "manual",
-            file_url = "http://example.com/certificate.pdf",
+            file_url = "media/documents/valid_doc.pdf",
             status = "pending",
             creditor = self.creditor
         )          
