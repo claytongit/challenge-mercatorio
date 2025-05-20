@@ -2,35 +2,16 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
-from .models import Creditor, Precatorio, PersonalDocument, Certificate
+from mercatorio.models import Creditor, Precatorio, PersonalDocument, Certificate
 
 # Create your tests here.
-class ModelsTest(TestCase):
+class CreditorTest(TestCase):
     def setUp(self):
         self.creditor = Creditor.objects.create(
             name="Test Creditor",
             cpf_cnpj="123.456.789-00",
             email="test@example.com",
             phone="(11) 9999-9999"
-        )
-        self.precatorio = Precatorio.objects.create(
-            precatorio_number = "0001234-56.2020.8.26.0050",
-            nominal_value = 50000.00,
-            forum = "TJSP",
-            publication_date = "2023-10-01",
-            creditor = self.creditor
-        )
-        self.personal_document = PersonalDocument.objects.create(
-            doc_type = "RG",
-            file_url = "http://example.com/rg.pdf",
-            creditor = self.creditor
-        )
-        self.certificate = Certificate.objects.create(
-            cert_type = "state",
-            origin = "manual",
-            file_url = "http://example.com/certificate.pdf",
-            status = "pending",
-            creditor = self.creditor
         )
 
     def test_creditor_creation(self):
@@ -48,6 +29,22 @@ class ModelsTest(TestCase):
                 email="duplicate@example.com",
                 phone="(11) 8888-8888"
             )
+
+class PrecatorioTest(TestCase):
+    def setUp(self):
+        self.creditor = Creditor.objects.create(
+            name="Test Creditor",
+            cpf_cnpj="123.456.789-00",
+            email="test@example.com",
+            phone="(11) 9999-9999"
+        )
+        self.precatorio = Precatorio.objects.create(
+            precatorio_number = "0001234-56.2020.8.26.0050",
+            nominal_value = 50000.00,
+            forum = "TJSP",
+            publication_date = "2023-10-01",
+            creditor = self.creditor
+        )
 
     def test_precatorio_creation(self):
         self.assertEqual(self.precatorio.precatorio_number, "0001234-56.2020.8.26.0050")
@@ -77,6 +74,20 @@ class ModelsTest(TestCase):
                 creditor = None # Creditor Null
             )
 
+class PersonalDocumentTest(TestCase):
+    def setUp(self):
+        self.creditor = Creditor.objects.create(
+            name="Test Creditor",
+            cpf_cnpj="123.456.789-00",
+            email="test@example.com",
+            phone="(11) 9999-9999"
+        )
+        self.personal_document = PersonalDocument.objects.create(
+            doc_type = "RG",
+            file_url = "http://example.com/rg.pdf",
+            creditor = self.creditor
+        )
+
     def test_personal_document_creation(self):
         self.assertEqual(self.personal_document.doc_type, "RG")
         self.assertEqual(self.personal_document.file_url, "http://example.com/rg.pdf")
@@ -100,6 +111,21 @@ class ModelsTest(TestCase):
         with self.assertRaises(ValidationError):
             personal_document.full_clean()
 
+class CertificateTest(TestCase):
+    def setUp(self):
+        self.creditor = Creditor.objects.create(
+            name="Test Creditor",
+            cpf_cnpj="123.456.789-00",
+            email="test@example.com",
+            phone="(11) 9999-9999"
+        )
+        self.certificate = Certificate.objects.create(
+            cert_type = "state",
+            origin = "manual",
+            file_url = "http://example.com/certificate.pdf",
+            status = "pending",
+            creditor = self.creditor
+        )
     def test_certificate_creation(self):
         self.assertEqual(self.certificate.cert_type, "state")
         self.assertEqual(self.certificate.origin, "manual")
