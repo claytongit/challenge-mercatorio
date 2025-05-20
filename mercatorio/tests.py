@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
-from .models import Creditor, Precatorio
+from .models import Creditor, Precatorio, PersonalDocument
 
 # Create your tests here.
 class ModelsTest(TestCase):
@@ -17,6 +18,11 @@ class ModelsTest(TestCase):
             nominal_value = 50000.00,
             forum = "TJSP",
             publication_date = "2023-10-01",
+            creditor = self.creditor
+        )
+        self.personal_document = PersonalDocument.objects.create(
+            doc_type = "RG",
+            file_url = "http://example.com/rg.pdf",
             creditor = self.creditor
         )
 
@@ -64,4 +70,25 @@ class ModelsTest(TestCase):
                 creditor = None # Creditor Null
             )
 
+    def test_personal_document_creation(self):
+        self.assertEqual(self.personal_document.doc_type, "RG")
+        self.assertEqual(self.personal_document.file_url, "http://example.com/rg.pdf")
+        self.assertEqual(str(self.personal_document), "RG - Test Creditor")
     
+    def test_personal_document_creation_invalid_creditor_null(self):
+        with self.assertRaises(IntegrityError):
+            PersonalDocument.objects.create(
+                doc_type = "RG",
+                file_url = "http://example.com/rg.pdf",
+                creditor = None # Creditor Null
+            )
+
+    def test_personal_document_creation_invalid_doc_type(self):
+        personal_document = PersonalDocument.objects.create(
+            doc_type = "PIS", # Invalid doc_type
+            file_url = "http://example.com/rg.pdf",
+            creditor = self.creditor
+        )          
+
+        with self.assertRaises(ValidationError):
+            personal_document.full_clean()
