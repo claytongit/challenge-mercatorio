@@ -35,6 +35,34 @@ class PersonalDocument(models.Model):
     submitted_at = models.DateTimeField(default=timezone.now)
 
     creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE, related_name='documents')
-    
+
     def __str__(self):
         return f"{self.get_doc_type_display()} - {self.creditor.name}"
+
+class Certificate(models.Model):
+    class CertificateType(models.TextChoices):
+        FEDERAL = 'federal', 'Federal'
+        STATE = 'state', 'Estadual'
+        MUNICIPAL = 'municipal', 'Municipal'
+        LABOR = 'labor', 'Trabalhista'
+
+    class CertificateOrigin(models.TextChoices):
+        MANUAL = 'manual', 'Manual'
+        API = 'api', 'API'
+
+    class CertificateStatus(models.TextChoices):
+        NEGATIVE = 'negative', 'Negativa'
+        POSITIVE = 'positive', 'Positiva'
+        INVALID = 'invalid', 'Invalida'
+        PENDING = 'pending', 'Pendente'
+
+    cert_type = models.CharField(max_length=50, choices=CertificateType.choices)
+    origin = models.CharField(max_length=20, choices=CertificateOrigin.choices)
+    file_url = models.URLField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=CertificateStatus.choices, default=CertificateStatus.PENDING)
+    received_at = models.DateTimeField(default=timezone.now)
+
+    creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE, related_name='certificates')
+
+    def __str__(self):
+        return f"{self.cert_type} - {self.creditor.name} ({self.status})"

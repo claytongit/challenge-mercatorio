@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 
-from .models import Creditor, Precatorio, PersonalDocument
+from .models import Creditor, Precatorio, PersonalDocument, Certificate
 
 # Create your tests here.
 class ModelsTest(TestCase):
@@ -23,6 +23,13 @@ class ModelsTest(TestCase):
         self.personal_document = PersonalDocument.objects.create(
             doc_type = "RG",
             file_url = "http://example.com/rg.pdf",
+            creditor = self.creditor
+        )
+        self.certificate = Certificate.objects.create(
+            cert_type = "state",
+            origin = "manual",
+            file_url = "http://example.com/certificate.pdf",
+            status = "pending",
             creditor = self.creditor
         )
 
@@ -92,3 +99,33 @@ class ModelsTest(TestCase):
 
         with self.assertRaises(ValidationError):
             personal_document.full_clean()
+
+    def test_certificate_creation(self):
+        self.assertEqual(self.certificate.cert_type, "state")
+        self.assertEqual(self.certificate.origin, "manual")
+        self.assertEqual(self.certificate.file_url, "http://example.com/certificate.pdf")
+        self.assertEqual(self.certificate.status, "pending")
+        self.assertEqual(self.certificate.creditor, self.creditor)
+        self.assertEqual(str(self.certificate), "state - Test Creditor (pending)")
+    
+    def test_certificate_creation_invalid_creditor_null(self):
+        with self.assertRaises(IntegrityError):
+            Certificate.objects.create(
+                cert_type = "state",
+                origin = "manual",
+                file_url = "http://example.com/certificate.pdf",
+                status = "pending",
+                creditor = None # Creditor Null
+            )
+
+    def test_certificate_creation_invalid_cert_type(self):
+        certificate = Certificate.objects.create(
+            cert_type = "invalid", # Invalid cert_type
+            origin = "manual",
+            file_url = "http://example.com/certificate.pdf",
+            status = "pending",
+            creditor = self.creditor
+        )          
+
+        with self.assertRaises(ValidationError):
+            certificate.full_clean()
