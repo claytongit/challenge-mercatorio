@@ -4,7 +4,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from mercatorio.forms import PersonalDocumentForm, CertificateForms
 from unittest.mock import patch
 
-from mercatorio.models import Creditor, Certificate
+from mercatorio.models import Creditor, Certificate, Precatorio, PersonalDocument
+from django.utils import timezone
 
 import requests_mock
 
@@ -201,3 +202,59 @@ class SearchCertificatesViewTest(TestCase):
             tipos = [c.cert_type for c in certs]
             self.assertIn('federal', tipos)
             self.assertIn('labor', tipos)
+
+class CreditorDetailViewTest(TestCase):
+    def setUp(self):
+        self.creditor = Creditor.objects.create(
+            name='Maria Silva',
+            cpf_cnpj='12345678900',
+            email='maria@example.com',
+            phone='11999999999'
+        )
+
+        self.precatorio = Precatorio.objects.create(
+            creditor=self.creditor,
+            precatorio_number='0001234-56.2020.8.26.0050',
+            nominal_value=50000.0,
+            forum='TJSP',
+            publication_date='2023-10-01'
+        )
+
+        self.document = PersonalDocument.objects.create(
+            creditor=self.creditor,
+            doc_type='RG',
+            file_url='/media/documents/rg_maria.pdf',
+            submitted_at=timezone.now()
+        )
+
+        self.certificate = Certificate.objects.create(
+            creditor=self.creditor,
+            cert_type='federal',
+            status='negative',
+            origin='api',
+            file_url='/media/certificates/federal_fake_certidao.pdf',
+            received_at=timezone.now()
+        )
+
+    def test_credor_detail_endpoint_returns_complete_data(self):
+        response = self.client.get(f'/credores/{self.creditor.id}')
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+
+        # Credor
+        self.assertEqual(data['name'], 'Maria Silva')
+        self.assertEqual(data['cpf_cnpj'], '12345678900')
+
+        # Precatorio
+        self.assertEqual(data['precatorio']['precatorio_number'], '0001234-56.2020.8.26.0050')
+
+        # Documentos
+        self.assertEqual(len(data['documents']), 1)
+        self.assertEqual(data['documents'][0]['doc_type'], 'RG')
+        self.assertEqual(data['documents'][0]['file_url'], '/media/documents/rg_maria.pdf')
+
+        # Certidões
+        self.assertEqual(len(data['certificates']), 1)
+        self.assertEqual(data['certificates'][0]['cert_type'], 'federal')
+        self.assertEqual(data['certificates'][0]['status'], 'negative')

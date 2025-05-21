@@ -8,7 +8,7 @@ import random
 import requests
 from django.utils import timezone
 
-from .serializers import CreditorSerializer
+from .serializers import CreditorSerializer, CreditorDetailSerializer
 from .models import Creditor, PersonalDocument, Certificate
 from mercatorio.forms import PersonalDocumentForm, CertificateForms
 
@@ -93,3 +93,9 @@ def search_certificates_view(request, pk):
         )
 
     return Response({'message': 'Certidões geradas com sucesso'}, status = status.HTTP_200_OK)
+
+@api_view(['GET'])
+def creditor_detail_view(request, pk):
+    creditor = get_object_or_404(Creditor, pk=pk)
+    serializer = CreditorDetailSerializer(creditor)
+    return Response(serializer.data)
