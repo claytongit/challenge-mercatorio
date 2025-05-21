@@ -19,8 +19,8 @@ Projeto desenvolvido para simular a etapa de originação de precatórios, inclu
 
 ```bash
 # Clone o repositório
-git clone https://gitlab.com/usuario/mercatorio-backend-challenge.git
-cd mercatorio-backend-challenge
+git clone https://github.com/claytongit/challenge-mercatorio
+cd challenge-mercatorio
 
 # Crie o ambiente virtual
 python -m venv venv
@@ -68,15 +68,16 @@ Testes cobrem:
 - Serviço de revalidação
 - Views e serializers
 
-## 📬 Endpoints principais
+## 📬 Endpoints Principais
 
-Método	Rota	                            Descrição (tipo)
-POST	/credores	                        Cadastra credor e seu precatório (API Rest)
-POST	/credores/:id/documentos	        Upload de documentos pessoais (Web, Abrir diretamente no browser)
-POST	/credores/:id/certidoes	            Upload manual de certidões (Web, Abrir diretamente no browser)
-POST	/credores/:id/buscar-certidoes	    Simula consulta de certidões via API mock (API Rest)
-GET	    /credores/:id	                    Consulta geral do credor (API Rest)
-GET	    /api/certidoes?cpf_cnpj=00000000000	Mock da API de certidões (API Rest)
+| Método | Rota                                     | Descrição                                      | Tipo       |
+|--------|------------------------------------------|------------------------------------------------|------------|
+| POST   | `/credores`                              | Cadastra credor e seu precatório               | API Rest   |
+| POST   | `/credores/:id/documentos`               | Upload de documentos pessoais                  | Web (UI)   |
+| POST   | `/credores/:id/certidoes`                | Upload manual de certidões                     | Web (UI)   |
+| POST   | `/credores/:id/buscar-certidoes`         | Simula consulta de certidões via API mock      | API Rest   |
+| GET    | `/credores/:id`                          | Consulta geral do credor                       | API Rest   |
+| GET    | `/api/certidoes?cpf_cnpj=00000000000`    | Mock da API de certidões                       | API Rest   |
 
 ## 🖥 Interface web
 
