@@ -1,0 +1,51 @@
+{% extends "mercatorio/base.html" %}
+
+{% block title %}Certidões{% endblock %}
+
+{% block navbar %}
+    <span class="navbar-text">{{ creditor.name }} - {{ creditor.cpf_cnpj }}</span>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            Enviar Documento Pessoal
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {{ form.as_p }}
+                
+                <div class="d-flex justify-content-end mt-5">
+                    <button class="btn btn-primary btn-sm" type="submit">Enviar Documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <br>
+    <hr>
+    <br>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Tipo Certidão</th>
+                <th scope="col">Origem</th>
+                <th scope="col">Status</th>
+                <th scope="col">Url do arquivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for certificate in certificates %}
+                <tr>
+                    <td>{{ certificate.get_cert_type_display }}</td>
+                    <td>{{ certificate.get_origin_display }}</td>
+                    <td>{{ certificate.get_status_display }}</td>
+                    <td>
+                        <a href="{{ certificate.file_url }}" target="_blank">{{ certificate.file_url }}</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
