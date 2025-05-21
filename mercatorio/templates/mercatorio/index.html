@@ -1,47 +1,25 @@
 {% extends "mercatorio/base.html" %}
 
-{% block title %}Documentos Pessoais{% endblock %}
+{% block title %}Pagina Inicial{% endblock %}
 
 {% block navbar %}
-    <span class="navbar-text">{{ creditor.name }} - {{ creditor.cpf_cnpj }}</span>
+    <span class="navbar-text">Mercatório</span>
 {% endblock %}
 
 {% block content %}
     <div class="card">
         <div class="card-header bg-dark text-white">
-            Enviar Documento Pessoal
+            Bem Vindo ao Mercatório!
         </div>
         <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-
-                {{ form.as_p }}
-                
-                <div class="d-flex justify-content-end mt-5">
-                    <button class="btn btn-primary btn-sm" type="submit">Enviar Documento</button>
-                </div>
-            </form>
+            <h5 class="card-title">Atualizações de certificações</h5>
+            <p class="card-text">As certificações são atualizadas a cada 24 horas.</p>
+            {% if certificates.count > 0 %}
+                <code>Total de {{ certificates.count }} certificações.</code>
+                <code>Ultima atualização foi {{ certificates.first.received_at }}</code>
+            {% else %}
+                <code>Não há certificações</code>
+            {% endif %}
         </div>
     </div>
-    <br>
-    <hr>
-    <br>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Tipo</th>
-                <th scope="col">Url Documento</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for doc in documents %}
-                <tr>
-                    <td>{{ doc.get_doc_type_display }}</td>
-                    <td>
-                        <a href="{{ doc.file_url }}" target="_blank">{{ doc.file_url }}</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 {% endblock %}

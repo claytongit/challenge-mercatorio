@@ -12,7 +12,7 @@ class PersonalDocumentForm(forms.ModelForm):
             'file': 'Documento',
         }
         widgets = {
-            'doc_type': forms.Select(attrs={'class': 'form-select w-25', 'requered': 'true'}),
+            'doc_type': forms.Select(attrs={'class': 'form-select', 'requered': 'true'}),
             'file': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
                 'accept': '.pdf,.jpg,.jpeg,.png'
