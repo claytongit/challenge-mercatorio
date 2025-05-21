@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_beat',
     'rest_framework',
+    'drf_spectacular',
     'mercatorio',
 ]
 
@@ -130,3 +131,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 CELERY_TIMEZONE = 'America/Sao_Paulo'
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}

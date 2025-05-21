@@ -12,11 +12,14 @@ from .serializers import CreditorSerializer, CreditorDetailSerializer
 from .models import Creditor, PersonalDocument, Certificate
 from mercatorio.forms import PersonalDocumentForm, CertificateForms
 
+from .schemas import create_creditor_schema, mock_cert_schema, creditor_detail_schema, search_certificates_schema
+
 # Create your views here.
 def index_view(request):
     certificate = Certificate.objects.all
     return render(request, 'mercatorio/index.html', {'certificates': certificate})
 
+@create_creditor_schema
 @api_view(['POST'])
 def create_creditor(request):
     cpf_cnpj = request.data.get('cpf_cnpj')
@@ -53,6 +56,7 @@ def upload_certificate_view(request, pk):
             return redirect('mercatorio:upload_certificate', pk=creditor.id)
     return render(request, 'mercatorio/certificate.html', {'form': form, 'creditor': creditor, 'certificates': certificate})
 
+@mock_cert_schema
 @api_view(['GET'])
 def mock_certificate_api(request):
     cpf_cnpj = request.GET.get('cpf_cnpj')
@@ -75,6 +79,7 @@ def mock_certificate_api(request):
         'certidoes': certidoes
     }, status=status.HTTP_200_OK)
 
+@search_certificates_schema
 @api_view(['POST'])
 def search_certificates_view(request, pk):
     creditor = get_object_or_404(Creditor, pk=pk)
@@ -99,6 +104,7 @@ def search_certificates_view(request, pk):
 
     return Response({'message': 'Certidões geradas com sucesso'}, status = status.HTTP_200_OK)
 
+@creditor_detail_schema
 @api_view(['GET'])
 def creditor_detail_view(request, pk):
     creditor = get_object_or_404(Creditor, pk=pk)
