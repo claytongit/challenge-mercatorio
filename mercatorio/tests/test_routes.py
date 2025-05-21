@@ -2,7 +2,7 @@ from django.test import TestCase, override_settings
 import tempfile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from mercatorio.forms import PersonalDocumentForm, CertificateForms
-# from django.core.exceptions import ValidationError 
+from unittest.mock import patch
 
 from mercatorio.models import Creditor
 
@@ -151,3 +151,21 @@ class UploadCertificateRouteTest(TestCase):
         )
 
         self.assertFalse(form.is_valid())
+
+@patch('random.choice')
+class APIMockTest(TestCase):
+    def test_api_mock_return_certificate_fix(self, mock_choice):
+        status = ['negative', 'positive', 'invalid', 'pending']
+        tipos = ['federal', 'state', 'municipal', 'labor']
+        mock_choice.side_effect = [val for pair in zip(status, tipos) for val in pair]
+
+        response = self.client.get('/api/certidoes?cpf_cnpj=12345678900')
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(data['cpf_cnpj'], '12345678900')
+        self.assertEqual(len(data['certidoes']), 4)
+
+        self.assertEqual(data['certidoes'][0]['tipo'], 'federal')
+        self.assertEqual(data['certidoes'][0]['status'], 'negative')
+        self.assertEqual(data['certidoes'][0]['file_url'], '/media/certificates/federal_fake_certidao.pdf')
