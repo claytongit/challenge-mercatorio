@@ -66,7 +66,7 @@ class UploadDocumentRouteTest(TestCase):
         response = self.client.get(f'/credores/{self.creditor.id}/documentos')
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'mercatorio/index.html')
+        self.assertTemplateUsed(response, 'mercatorio/document.html')
 
     def test_upload_document_route_view_has_form(self):
         response = self.client.get(f'/credores/{self.creditor.id}/documentos')

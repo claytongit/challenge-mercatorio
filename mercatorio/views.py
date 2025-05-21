@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,6 +13,10 @@ from .models import Creditor, PersonalDocument, Certificate
 from mercatorio.forms import PersonalDocumentForm, CertificateForms
 
 # Create your views here.
+def index_view(request):
+    certificate = Certificate.objects.all
+    return render(request, 'mercatorio/index.html', {'certificates': certificate})
+
 @api_view(['POST'])
 def create_creditor(request):
     cpf_cnpj = request.data.get('cpf_cnpj')
@@ -34,7 +38,7 @@ def upload_document_view(request, pk):
             document = form.save(commit=False)
             document.creditor = creditor
             document.save()
-    return render(request, 'mercatorio/index.html', {'form': form, 'creditor': creditor, 'documents': Personal_document})
+    return render(request, 'mercatorio/document.html', {'form': form, 'creditor': creditor, 'documents': Personal_document})
 
 def upload_certificate_view(request, pk):
     creditor = get_object_or_404(Creditor, pk=pk)
@@ -46,6 +50,7 @@ def upload_certificate_view(request, pk):
             certificate = form.save(commit=False)
             certificate.creditor = creditor
             certificate.save()
+            return redirect('mercatorio:upload_certificate', pk=creditor.id)
     return render(request, 'mercatorio/certificate.html', {'form': form, 'creditor': creditor, 'certificates': certificate})
 
 @api_view(['GET'])

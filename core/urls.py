@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 from mercatorio import views
 
 urlpatterns = [
-    path('credores', include('mercatorio.urls')),
+    path('', include('mercatorio.urls')),
     path('admin/', admin.site.urls),
     path('api/certidoes', views.mock_certificate_api, name='mock-certidoes'),
 ]
