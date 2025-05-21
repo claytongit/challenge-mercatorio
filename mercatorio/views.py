@@ -1,10 +1,12 @@
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.http import JsonResponse
 import random
+
+import requests
+from django.utils import timezone
 
 from .serializers import CreditorSerializer
 from .models import Creditor, PersonalDocument, Certificate
@@ -67,3 +69,27 @@ def mock_certificate_api(request):
         'cpf_cnpj': cpf_cnpj,
         'certidoes': certidoes
     }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def search_certificates_view(request, pk):
+    creditor = get_object_or_404(Creditor, pk=pk)
+    cpf_cnpj = creditor.cpf_cnpj
+
+    response = requests.get('http://localhost:8000/api/certidoes', params={'cpf_cnpj': cpf_cnpj})
+
+    if response.status_code != 200:
+        return Response({'message': 'rro ao consultar certidões'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    data = response.json()
+
+    for cert in data['certidoes']:
+        Certificate.objects.create(
+            creditor=creditor,
+            cert_type=cert['tipo'],
+            status=cert['status'],
+            origin='api',
+            file_url=cert['file_url'],
+            received_at=timezone.now()
+        )
+
+    return Response({'message': 'Certidões geradas com sucesso'}, status = status.HTTP_200_OK)
