@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    environment:
+      - DEBUG=1
+
+  worker:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    command: celery -A core worker --pool=solo --loglevel=info
+
+  beat:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    command: celery -A core beat --loglevel=info
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
