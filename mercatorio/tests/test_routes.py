@@ -4,7 +4,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from mercatorio.forms import PersonalDocumentForm, CertificateForms
 from unittest.mock import patch
 
-from mercatorio.models import Creditor
+from mercatorio.models import Creditor, Certificate
+
+import requests_mock
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -169,3 +171,33 @@ class APIMockTest(TestCase):
         self.assertEqual(data['certidoes'][0]['tipo'], 'federal')
         self.assertEqual(data['certidoes'][0]['status'], 'negative')
         self.assertEqual(data['certidoes'][0]['file_url'], '/media/certificates/federal_fake_certidao.pdf')
+
+class SearchCertificatesViewTest(TestCase):
+    def setUp(self):
+        self.creditor = Creditor.objects.create(
+            name='Teste User',
+            cpf_cnpj='12345678900',
+            email='teste@example.com',
+            phone='11999999999'
+        )
+
+    def test_search_certificates_view_save_certificates(self):
+        mock_response = {
+            "cpf_cnpj": "12345678900",
+            "certidoes": [
+                {"tipo": "federal", "status": "negative", "file_url": "/media/certificates/federal_fake_certidao.pdf"},
+                {"tipo": "labor", "status": "positive", "file_url": "/media/certificates/labor_fake_certidao.pdf"},
+            ]
+        }
+
+        with requests_mock.Mocker() as m:
+            m.get('http://localhost:8000/api/certidoes', json=mock_response)
+
+            response = self.client.post(f'/credores/{self.creditor.id}/buscar-certidoes')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(Certificate.objects.filter(creditor=self.creditor).count(), 2)
+
+            certs = Certificate.objects.filter(creditor=self.creditor)
+            tipos = [c.cert_type for c in certs]
+            self.assertIn('federal', tipos)
+            self.assertIn('labor', tipos)
