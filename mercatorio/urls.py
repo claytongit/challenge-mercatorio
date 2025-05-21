@@ -9,4 +9,5 @@ urlpatterns = [
     path('/<int:pk>/documentos', views.upload_document_view, name='upload-document'),
     path('/<int:pk>/certidoes', views.upload_certificate_view, name='upload_certificate'),
     path('/<int:pk>/buscar-certidoes', views.search_certificates_view, name='search_certificates'),
+    path('/<int:pk>', views.creditor_detail_view, name='creditor_detail'),
 ]
